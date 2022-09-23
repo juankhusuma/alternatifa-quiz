@@ -4,34 +4,39 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
+  User,
 } from "firebase/auth";
-import { app } from "./lib/firebase";
-import ActionButton from "./components/ActionButton";
+import { app, firestore } from "./lib/firebase";
 import Navbar from "./components/Navbar";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
+import { useCollection, useDocument } from "react-firebase-hooks/firestore";
+import { collection, getDoc, doc, setDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 
 const auth = getAuth(app);
 
 function App() {
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
-  };
+  const [user] = useAuthState(auth);
+  const [profile, setProfile] = useState({});
+  useEffect(() => {
+    (async () => {
+      if (user) {
+        const profileRef = doc(firestore, "profiles", user?.uid as string);
+        const profiles = await getDoc(profileRef);
+        if (!profiles.data()) {
+          await setDoc(profileRef, { roles: "user" });
+        }
+        setProfile(() => profiles.data());
+      }
+    })();
+  }, [user]);
 
-  const [user, loading, error] = useAuthState(auth);
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error</div>;
   return (
     <div>
       <Navbar />
-      {JSON.stringify(user)}
-      {user ? (
-        <ActionButton text="Sign Out" onClick={() => signOut(auth)} />
-      ) : (
-        <ActionButton text="Sign In" onClick={() => signInWithGoogle()} />
-      )}
+      {profile && JSON.stringify(profile)}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
