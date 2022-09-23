@@ -6,6 +6,11 @@ import {
   signOut,
 } from "firebase/auth";
 import { app } from "./lib/firebase";
+import ActionButton from "./components/ActionButton";
+import Navbar from "./components/Navbar";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import About from "./pages/About";
 
 const auth = getAuth(app);
 
@@ -20,12 +25,19 @@ function App() {
   if (error) return <div>Error</div>;
   return (
     <div>
+      <Navbar />
       {JSON.stringify(user)}
       {user ? (
-        <button onClick={() => signOut(auth)}>Sign Out</button>
+        <ActionButton text="Sign Out" onClick={() => signOut(auth)} />
       ) : (
-        <button onClick={signInWithGoogle}>Sign In</button>
+        <ActionButton text="Sign In" onClick={() => signInWithGoogle()} />
       )}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
